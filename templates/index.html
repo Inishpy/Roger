@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Roger Demo</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f1f1f1;
+            margin: 0;
+            padding: 0;
+        }
+        #search-container {
+            text-align: center;
+            margin-top: 150px;
+        }
+        #audio-search {
+            display: inline-block;
+            width: 300px;
+            height: 50px;
+            background-color: #f9f9f9;
+            border: 1px solid #d6d6d6;
+            border-radius: 5px;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+        #search-bar {
+            display: inline-block;
+            width: 500px;
+            height: 50px;
+            font-size: 18px;
+            padding: 10px;
+            border: 1px solid #d6d6d6;
+            border-radius: 5px;
+        }
+        #google-logo {
+            margin-top: 50px;
+            text-align: center;
+        }
+        #bookmarks {
+            text-align: center;
+            margin-top: 50px;
+        }
+        .custom-title {
+          color: #1a3c5f; /* Bluish color */
+          font-family: Arial, sans-serif; /* Optional: Choose a suitable font */
+          font-size: 36px; /* Increase the font size */
+          font-weight: 900; /* Use a heavier font weight for more boldness */
+          padding: 20px 0; /* Add vertical padding */
+          text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2); 
+     }
+
+     .custom-button {
+            background-color: #87CEFA; /* Light blue color */
+            color: rgb(32, 32, 32);
+            font-family: Arial, sans-serif;
+            font-weight: 300;
+            border: none;
+            border-radius: 5px;
+            padding: 8px 16px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+
+        .card-body {
+          background-color: #c5bdbe; /* Light red background */
+          color: #721c24; /* Dark red text color */
+          border: 1px solid #727272; /* Border color */
+          border-radius: 5px; /* Rounded corners */
+          padding: 10px; /* Padding */
+          text-align: center; /* Center text */
+      }
+
+
+      .custom-input-group {
+        
+        border-radius: 20px; /* Rounded corners */
+        padding: 10px; /* Padding */
+        
+    }
+
+    .custom-input-group .btn {
+        border-top-left-radius: 0;
+        border-bottom-left-radius: 0;
+    }
+
+    .custom-input-group .input-group-text {
+        background-color: transparent; /* Transparent background for the icon */
+        border: none; /* No border */
+    }
+
+    .custom-input-group input {
+        border-top-right-radius: 0;
+        border-bottom-right-radius: 0;
+        border-top-left-radius: 10px;
+        border-bottom-left-radius: 10px;
+        border-color: rgb(177, 177, 177);
+         /* No border */
+        box-shadow: none; /* No shadow */
+    }
+
+    /* Add styles for the icons to make them colorful */
+    .custom-input-group .bi {
+        color: #2e323a; /* Google blue */
+    }
+
+    /* Add styles for the icons on hover to make them darker */
+    .custom-input-group .bi:hover {
+        color: #ffffff; /* Darker blue */
+    }
+    .chatbot-heading {
+    color: #333; /* Dark text color */
+    padding: 10px 20px; /* Padding */
+    border-radius: 20px; /* Rounded corners */
+   
+    text-align: center; /* Center text */
+    font-family: Arial, sans-serif; /* Font family */
+    font-size: 24px; /* Font size */
+    
+    /* Uppercase text */
+    letter-spacing: 1px; /* Letter spacing */
+}
+
+
+  
+    </style>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+  
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.5.0/socket.io.js"></script>
+    <script>
+        const socket = io();
+
+        
+        socket.on('connected', function(data) {
+            console.log(data.message);
+        });
+        
+        //append the sentence sent through socket
+        socket.on('sentence', function(data) {
+            console.log('Received sentence:', data.message);
+            if (document.getElementById('output').innerHTML == "Processing" || document.getElementById('output').innerHTML == "Recording for 6 seconds"){
+              document.getElementById('output').innerHTML = data.message + '';
+            }
+            else{
+              document.getElementById('output').innerHTML += data.message + '';
+
+            }
+            
+        });
+
+        function start() {
+
+          //remvoe the stop genrating button and refresh button first
+          var container = document.getElementById("stop-button");
+            while (container.firstChild) {
+                container.removeChild(container.firstChild);
+            }
+
+
+
+            //append the processing or record for 6 seconds text
+            var input = document.getElementById('input_field').value;
+            var stopButton = document.getElementsByClassName("stop-button");
+            document.getElementById('input_field').value = "";
+            if(input == ""){
+                document.getElementById('output').innerHTML = 'Recording for 6 seconds';
+
+            }
+            else{
+                document.getElementById('output').innerHTML = 'Processing';
+            }
+            
+
+            //add stop generating and refresh button
+            var container = document.getElementById("stop-button");
+            var button = document.createElement("button");
+            button.innerHTML = "Stop generating";
+            button.className = "custom-button";
+            button.onclick = function() {
+                socket.emit('stopmodel');
+
+                // Create Refresh button
+              var refreshButton = document.createElement("button");
+              refreshButton.innerHTML = "Refresh";
+              refreshButton.className = "custom-button";
+              refreshButton.onclick = function() {
+                  location.reload(); // Refresh the page
+              };
+              container.appendChild(refreshButton);
+            };
+            container.appendChild(button);
+            socket.emit('start', { 'input': input });
+        }
+    </script>
+</head>
+<body>
+  
+    <div class="p-5">
+        <div id="google-logo" class="mb-5">
+            <h1 class="custom-title">Roger Assitant</h1>
+        </div>
+        <div class="chatbot-heading">
+          <div class="centered-image">
+            
+        </div>
+      </div>
+
+        <div class="container d-flex">
+          <div class="input-group m-3 justify-content-center w-70 custom-input-group">
+              <form id="input_form" method="POST" style="width: 33vw;">
+                  <input style="width: 100%;height: 100%;" type="text" id="input_field" name="input_field" placeholder="Ask Roger">
+      
+              </form>
+      
+              <button onclick="start()" class="btn btn-outline-secondary">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-search" viewBox="0 0 16 16">
+                      <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001q.044.06.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1 1 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0"/>
+                  </svg>
+              </button>
+      
+              <button onclick="start()" class="btn btn-outline-secondary">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-mic-fill" viewBox="0 0 16 16">
+                      <path d="M5 3a3 3 0 0 1 6 0v5a3 3 0 0 1-6 0z"/>
+                      <path d="M3.5 6.5A.5.5 0 0 1 4 7v1a4 4 0 0 0 8 0V7a.5.5 0 0 1 1 0v1a5 5 0 0 1-4.5 4.975V15h3a.5.5 0 0 1 0 1h-7a.5.5 0 0 1 0-1h3v-2.025A5 5 0 0 1 3 8V7a.5.5 0 0 1 .5-.5"/>
+                  </svg>
+      
+              </button>
+      
+      
+              <span class="btn btn-outline-secondary">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-image" viewBox="0 0 16 16">
+                      <path d="M6.002 5.5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0"/>
+                      <path d="M2.002 1a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V3a2 2 0 0 0-2-2zm12 1a1 1 0 0 1 1 1v6.5l-3.777-1.947a.5.5 0 0 0-.577.093l-3.71 3.71-2.66-1.772a.5.5 0 0 0-.63.062L1.002 12V3a1 1 0 0 1 1-1z"/>
+                  </svg>
+              </span>
+      
+          </div>
+      
+      </div>
+      
+
+        
+    
+        
+        <div id="output"></div>
+
+        <div class="container d-flex justify-content-center", id="stop-button">
+          
+
+        </div>
+
+    </div>
+    
+    
+    
+    <div id="bookmarks">
+        <div class="container text-center">
+            <div class="container ">
+                <div class="row">
+                  <div class="col-lg-3 col-sm-3 mb-4">
+                    <div class="card custom-card">
+                      <div class="card-body">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-telephone-fill" viewBox="0 0 16 16">
+                            <path fill-rule="evenodd" d="M1.885.511a1.745 1.745 0 0 1 2.61.163L6.29 2.98c.329.423.445.974.315 1.494l-.547 2.19a.68.68 0 0 0 .178.643l2.457 2.457a.68.68 0 0 0 .644.178l2.189-.547a1.75 1.75 0 0 1 1.494.315l2.306 1.794c.829.645.905 1.87.163 2.611l-1.034 1.034c-.74.74-1.846 1.065-2.877.702a18.6 18.6 0 0 1-7.01-4.42 18.6 18.6 0 0 1-4.42-7.009c-.362-1.03-.037-2.137.703-2.877z"/>
+                          </svg>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-lg-3 col-sm-3 mb-4">
+                    <div class="card custom-card">
+                      <div class="card-body">
+                        
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-taxi-front" viewBox="0 0 16 16">
+                                <path d="M4.862 5.276 3.906 7.19a.51.51 0 0 0 .497.731c.91-.073 2.35-.17 3.597-.17s2.688.097 3.597.17a.51.51 0 0 0 .497-.731l-.956-1.913A.5.5 0 0 0 10.691 5H5.309a.5.5 0 0 0-.447.276M4 10a1 1 0 1 1-2 0 1 1 0 0 1 2 0m10 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0m-9 0a1 1 0 0 1 1-1h4a1 1 0 1 1 0 2H6a1 1 0 0 1-1-1"/>
+                                <path d="M6 1a1 1 0 0 0-1 1v1h-.181A2.5 2.5 0 0 0 2.52 4.515l-.792 1.848a.8.8 0 0 1-.38.404c-.5.25-.855.715-.965 1.262L.05 9.708a2.5 2.5 0 0 0-.049.49v.413c0 .814.39 1.543 1 1.997V14.5a.5.5 0 0 0 .5.5h2a.5.5 0 0 0 .5-.5v-1.338c1.292.048 2.745.088 4 .088s2.708-.04 4-.088V14.5a.5.5 0 0 0 .5.5h2a.5.5 0 0 0 .5-.5v-1.892c.61-.454 1-1.183 1-1.997v-.413q0-.248-.049-.49l-.335-1.68a1.8 1.8 0 0 0-.964-1.261.8.8 0 0 1-.381-.404l-.792-1.848A2.5 2.5 0 0 0 11.181 3H11V2a1 1 0 0 0-1-1zM4.819 4h6.362a1.5 1.5 0 0 1 1.379.91l.792 1.847a1.8 1.8 0 0 0 .853.904c.222.112.381.32.43.564l.336 1.679q.03.146.029.294v.413a1.48 1.48 0 0 1-1.408 1.484c-1.555.07-3.786.155-5.592.155s-4.037-.084-5.592-.155A1.48 1.48 0 0 1 1 10.611v-.413q0-.148.03-.294l.335-1.68a.8.8 0 0 1 .43-.563c.383-.19.685-.511.853-.904l.792-1.848A1.5 1.5 0 0 1 4.82 4Z"/>
+                              </svg>
+                       
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-lg-3 col-sm-3 mb-4">
+                    <div class="card custom-card">
+                      <div class="card-body">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-envelope-at" viewBox="0 0 16 16">
+                            <path d="M2 2a2 2 0 0 0-2 2v8.01A2 2 0 0 0 2 14h5.5a.5.5 0 0 0 0-1H2a1 1 0 0 1-.966-.741l5.64-3.471L8 9.583l7-4.2V8.5a.5.5 0 0 0 1 0V4a2 2 0 0 0-2-2zm3.708 6.208L1 11.105V5.383zM1 4.217V4a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v.217l-7 4.2z"/>
+                            <path d="M14.247 14.269c1.01 0 1.587-.857 1.587-2.025v-.21C15.834 10.43 14.64 9 12.52 9h-.035C10.42 9 9 10.36 9 12.432v.214C9 14.82 10.438 16 12.358 16h.044c.594 0 1.018-.074 1.237-.175v-.73c-.245.11-.673.18-1.18.18h-.044c-1.334 0-2.571-.788-2.571-2.655v-.157c0-1.657 1.058-2.724 2.64-2.724h.04c1.535 0 2.484 1.05 2.484 2.326v.118c0 .975-.324 1.39-.639 1.39-.232 0-.41-.148-.41-.42v-2.19h-.906v.569h-.03c-.084-.298-.368-.63-.954-.63-.778 0-1.259.555-1.259 1.4v.528c0 .892.49 1.434 1.26 1.434.471 0 .896-.227 1.014-.643h.043c.118.42.617.648 1.12.648m-2.453-1.588v-.227c0-.546.227-.791.573-.791.297 0 .572.192.572.708v.367c0 .573-.253.744-.564.744-.354 0-.581-.215-.581-.8Z"/>
+                          </svg>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-lg-3 col-sm-3 mb-4">
+                    <div class="card custom-card">
+                      <div class="card-body">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-envelope-at" viewBox="0 0 16 16">
+                            <path d="M2 2a2 2 0 0 0-2 2v8.01A2 2 0 0 0 2 14h5.5a.5.5 0 0 0 0-1H2a1 1 0 0 1-.966-.741l5.64-3.471L8 9.583l7-4.2V8.5a.5.5 0 0 0 1 0V4a2 2 0 0 0-2-2zm3.708 6.208L1 11.105V5.383zM1 4.217V4a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v.217l-7 4.2z"/>
+                            <path d="M14.247 14.269c1.01 0 1.587-.857 1.587-2.025v-.21C15.834 10.43 14.64 9 12.52 9h-.035C10.42 9 9 10.36 9 12.432v.214C9 14.82 10.438 16 12.358 16h.044c.594 0 1.018-.074 1.237-.175v-.73c-.245.11-.673.18-1.18.18h-.044c-1.334 0-2.571-.788-2.571-2.655v-.157c0-1.657 1.058-2.724 2.64-2.724h.04c1.535 0 2.484 1.05 2.484 2.326v.118c0 .975-.324 1.39-.639 1.39-.232 0-.41-.148-.41-.42v-2.19h-.906v.569h-.03c-.084-.298-.368-.63-.954-.63-.778 0-1.259.555-1.259 1.4v.528c0 .892.49 1.434 1.26 1.434.471 0 .896-.227 1.014-.643h.043c.118.42.617.648 1.12.648m-2.453-1.588v-.227c0-.546.227-.791.573-.791.297 0 .572.192.572.708v.367c0 .573-.253.744-.564.744-.354 0-.581-.215-.581-.8Z"/>
+                          </svg>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-lg-3 col-sm-3 mb-4">
+                    <div class="card custom-card">
+                      <div class="card-body">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-envelope-at" viewBox="0 0 16 16">
+                            <path d="M2 2a2 2 0 0 0-2 2v8.01A2 2 0 0 0 2 14h5.5a.5.5 0 0 0 0-1H2a1 1 0 0 1-.966-.741l5.64-3.471L8 9.583l7-4.2V8.5a.5.5 0 0 0 1 0V4a2 2 0 0 0-2-2zm3.708 6.208L1 11.105V5.383zM1 4.217V4a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v.217l-7 4.2z"/>
+                            <path d="M14.247 14.269c1.01 0 1.587-.857 1.587-2.025v-.21C15.834 10.43 14.64 9 12.52 9h-.035C10.42 9 9 10.36 9 12.432v.214C9 14.82 10.438 16 12.358 16h.044c.594 0 1.018-.074 1.237-.175v-.73c-.245.11-.673.18-1.18.18h-.044c-1.334 0-2.571-.788-2.571-2.655v-.157c0-1.657 1.058-2.724 2.64-2.724h.04c1.535 0 2.484 1.05 2.484 2.326v.118c0 .975-.324 1.39-.639 1.39-.232 0-.41-.148-.41-.42v-2.19h-.906v.569h-.03c-.084-.298-.368-.63-.954-.63-.778 0-1.259.555-1.259 1.4v.528c0 .892.49 1.434 1.26 1.434.471 0 .896-.227 1.014-.643h.043c.118.42.617.648 1.12.648m-2.453-1.588v-.227c0-.546.227-.791.573-.791.297 0 .572.192.572.708v.367c0 .573-.253.744-.564.744-.354 0-.581-.215-.581-.8Z"/>
+                          </svg>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-lg-3 col-sm-3 mb-4">
+                    <div class="card custom-card">
+                      <div class="card-body">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-alarm-fill" viewBox="0 0 16 16">
+                            <path d="M6 .5a.5.5 0 0 1 .5-.5h3a.5.5 0 0 1 0 1H9v1.07a7.001 7.001 0 0 1 3.274 12.474l.601.602a.5.5 0 0 1-.707.708l-.746-.746A6.97 6.97 0 0 1 8 16a6.97 6.97 0 0 1-3.422-.892l-.746.746a.5.5 0 0 1-.707-.708l.602-.602A7.001 7.001 0 0 1 7 2.07V1h-.5A.5.5 0 0 1 6 .5m2.5 5a.5.5 0 0 0-1 0v3.362l-1.429 2.38a.5.5 0 1 0 .858.515l1.5-2.5A.5.5 0 0 0 8.5 9zM.86 5.387A2.5 2.5 0 1 1 4.387 1.86 8.04 8.04 0 0 0 .86 5.387M11.613 1.86a2.5 2.5 0 1 1 3.527 3.527 8.04 8.04 0 0 0-3.527-3.527"/>
+                          </svg>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-lg-3 col-sm-3 mb-4">
+                    <div class="card custom-card">
+                      <div class="card-body">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-123" viewBox="0 0 16 16">
+                            <path d="M2.873 11.297V4.142H1.699L0 5.379v1.137l1.64-1.18h.06v5.961zm3.213-5.09v-.063c0-.618.44-1.169 1.196-1.169.676 0 1.174.44 1.174 1.106 0 .624-.42 1.101-.807 1.526L4.99 10.553v.744h4.78v-.99H6.643v-.069L8.41 8.252c.65-.724 1.237-1.332 1.237-2.27C9.646 4.849 8.723 4 7.308 4c-1.573 0-2.36 1.064-2.36 2.15v.057zm6.559 1.883h.786c.823 0 1.374.481 1.379 1.179.01.707-.55 1.216-1.421 1.21-.77-.005-1.326-.419-1.379-.953h-1.095c.042 1.053.938 1.918 2.464 1.918 1.478 0 2.642-.839 2.62-2.144-.02-1.143-.922-1.651-1.551-1.714v-.063c.535-.09 1.347-.66 1.326-1.678-.026-1.053-.933-1.855-2.359-1.845-1.5.005-2.317.88-2.348 1.898h1.116c.032-.498.498-.944 1.206-.944.703 0 1.206.435 1.206 1.07.005.64-.504 1.106-1.2 1.106h-.75z"/>
+                          </svg>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-lg-3 col-sm-3 mb-4">
+                    <div class="card custom-card">
+                      <div class="card-body">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-1-square-fill" viewBox="0 0 16 16">
+                            <path d="M2 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2zm7.283 4.002V12H7.971V5.338h-.065L6.072 6.656V5.385l1.899-1.383z"/>
+                          </svg>
+                      </div>
+                    </div>
+                  </div>
+                  <!-- Add more col elements for additional cards -->
+                </div>
+              </div>
+              
+          </div>
+    </div>
+   
+</body>
+</html>
+
+
+
